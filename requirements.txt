@@ -1,0 +1,3 @@
+# Core dependencies — the project runs fully offline with just these.
+# (stdlib: sqlite3, csv, json, hashlib, argparse, logging, dataclasses)
+python-dateutil>=2.8

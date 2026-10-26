@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Project data stores (regenerated from the CSV via the CLI)
+*.db
+*.sqlite
+*.sqlite3
+.chroma/
+vector_store.json
+audit.log
+
+# Synthetic cohort CSVs are regenerable via `python -m src.cli cohort`.
+# The source athlete CSV (athlete_a_wearable_daily.csv) stays tracked.
+data/athlete-*_wearable_daily.csv
+
+# Env / secrets
+.env
+*.key
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

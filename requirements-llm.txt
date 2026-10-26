@@ -1,0 +1,10 @@
+# Optional upgrades. Install these to use real embedding models, a real vector
+# database, and hosted LLM providers. The code auto-detects what is present.
+sentence-transformers>=2.2
+chromadb>=0.4
+openai>=1.0
+anthropic>=0.25
+numpy>=1.24
+
+# Dashboard (streamlit run app.py)
+streamlit>=1.30
