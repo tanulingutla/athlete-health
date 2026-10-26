@@ -78,9 +78,16 @@ Three panes: **Trends** (ACWR / HRV-vs-baseline / sleep charts straight from SQL
 `python -m src.cli evaluate` scores retrieval against a gold set of question → expected-date
 pairs grounded in the SQL analytics, reporting precision@k, recall@k, hit-rate, and MRR.
 This is the "iterate on context relevance and accuracy" loop made measurable. With the
-offline hashing embedder the harness reports a modest-but-honest baseline (hit-rate 1.0,
-MRR 1.0, precision ~0.6); installing `sentence-transformers` raises precision without any
-code change, since the retrieval plumbing is identical across backends.
+offline hashing embedder the harness reports a strong-but-honest baseline (hit-rate 1.0,
+MRR ~0.88, precision ~0.88): three of four gold queries retrieve perfectly, and the
+"worst sleep" query retrieves poor-sleep days but can't perfectly rank the five *worst*
+within them — a documented ceiling of the zero-dependency embedder. Installing
+`sentence-transformers` raises precision without any code change, since the retrieval
+plumbing is identical across backends.
+
+A results notebook, `analysis.ipynb`, charts the real findings (the Sept 3 load spike,
+the late-Sept HRV suppression cluster, the Oct 11/19 sleep crash) with matplotlib and
+ends with the live retrieval-quality scores. Needs `pip install matplotlib`.
 
 ### Enable real LLMs / ChromaDB (optional)
 

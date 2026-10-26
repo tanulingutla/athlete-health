@@ -165,7 +165,7 @@ with tab_ask:
         else:
             pipeline = RagPipeline(retriever=retriever)
             with st.spinner("Retrieving + generating..."):
-                res = pipeline.ask(question, top_k=top_k)
+                res = pipeline.ask(question, top_k=top_k, athlete_id=athlete_id)
             badge = "guardrail triggered" if res.guard_triggered else (
                 "citation ok" if res.citation_ok else "citation REJECTED")
             st.caption(f"provider: `{res.provider}`  ·  {badge}  ·  {res.citation_note}")

@@ -20,11 +20,11 @@ _INTENT_FILTERS = {
         {"acwr_band": {"$in": ["caution", "high_risk"]}},
     r"\b(detrain\w*|undertrain\w*|too little|taper\w*|rest week|easy week)\b":
         {"acwr_band": {"$in": ["detraining"]}},
-    r"\b(under-?recover\w*|hrv.{0,12}(suppress|low)|suppress\w*.{0,6}hrv|low hrv|"
-    r"fatigue\w*|run down|run-down)\b":
+    r"(under-?recover\w*|hrv.{0,12}(suppress|low)\w*|suppress\w*.{0,6}hrv|low hrv|"
+    r"fatigue\w*|run.?down)":
         {"hrv_state": {"$in": ["suppressed"]}},
-    r"\b(worst sleep|poor sleep|bad sleep|sleep.{0,12}worst|slept.{0,12}(worst|bad|poorly)|"
-    r"least sleep|sleep deprivation|sleep debt)\b":
+    r"(worst sleep|poor sleep|bad sleep|sleep.{0,12}(worst|bad|poor)\w*|"
+    r"slept.{0,12}(worst|bad|poorly|least)|least sleep|sleep deprivation|sleep debt)":
         {"poor_sleep": 1},
     r"\b(rest day|day off)\b":
         {"is_rest_day": 1},
@@ -62,14 +62,21 @@ class Retriever:
         return len(docs)
 
     def retrieve(self, question: str, top_k: int | None = None,
-                 use_structured_filter: bool = True) -> list[dict]:
+                 use_structured_filter: bool = True,
+                 athlete_id: str | None = None) -> list[dict]:
         top_k = top_k or RETRIEVAL.top_k
         q_emb = self.embedder.embed([question])[0]
-        where = infer_filter(question) if use_structured_filter else None
+
+        # Scope to one athlete so a shared store can hold a whole cohort without
+        # cross-contaminating retrieval. This filter is always applied; the intent
+        # filter is layered on top of it.
+        base = {"athlete_id": athlete_id} if athlete_id else {}
+        intent = infer_filter(question) if use_structured_filter else None
+        where = {**base, **intent} if intent else (base or None)
 
         results = self.store.query(q_emb, top_k=top_k, where=where)
-        # If the structured filter was too aggressive and found nothing, fall back
-        # to unfiltered semantic search so we never return an empty context.
-        if not results and where:
-            results = self.store.query(q_emb, top_k=top_k, where=None)
+        # If the intent filter was too aggressive and found nothing, fall back to
+        # the athlete scope alone so we never return an empty context.
+        if not results and intent:
+            results = self.store.query(q_emb, top_k=top_k, where=(base or None))
         return [r for r in results if r["score"] >= RETRIEVAL.min_similarity]

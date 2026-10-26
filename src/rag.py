@@ -52,11 +52,13 @@ class RagPipeline:
         self.retriever = retriever or Retriever()
         self.llm = LLMClient(provider=provider)
 
-    def ask(self, question: str, top_k: int | None = None) -> RagResult:
+    def ask(self, question: str, top_k: int | None = None,
+            athlete_id: str | None = None) -> RagResult:
         guard_triggered = guardrails.is_medical_advice_request(question)
 
         safe_question = guardrails.redact_pii(question)
-        results = self.retriever.retrieve(safe_question, top_k=top_k)
+        results = self.retriever.retrieve(safe_question, top_k=top_k,
+                                          athlete_id=athlete_id)
         allowed_dates = {r["metadata"].get("date") for r in results if r["metadata"].get("date")}
 
         user_prompt = _build_user_prompt(safe_question, results)

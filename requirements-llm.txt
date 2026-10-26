@@ -8,3 +8,6 @@ numpy>=1.24
 
 # Dashboard (streamlit run app.py)
 streamlit>=1.30
+
+# Results notebook (analysis.ipynb)
+matplotlib>=3.7

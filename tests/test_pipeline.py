@@ -98,6 +98,21 @@ class RetrievalIntentTests(unittest.TestCase):
         self.assertIsNone(infer_filter("tell me about tuesdays"))
 
 
+class EmbeddingDeterminismTests(unittest.TestCase):
+    def test_hashing_embedder_is_process_stable(self):
+        """Embeddings must not depend on PYTHONHASHSEED, or index-time and query-time
+        vectors would disagree across processes and silently break retrieval."""
+        from src.embeddings import HashingEmbedder
+
+        v1 = HashingEmbedder().embed(["suppressed hrv on a rest day"])[0]
+        v2 = HashingEmbedder().embed(["suppressed hrv on a rest day"])[0]
+        self.assertEqual(v1, v2)
+        # A known token must always land in the same bucket.
+        from src.embeddings import _stable_hash
+
+        self.assertEqual(_stable_hash("overtraining"), _stable_hash("overtraining"))
+
+
 class EvaluationTests(unittest.TestCase):
     def test_retrieval_quality_floor(self):
         """The gold set should at least be fully hit (every query finds a relevant

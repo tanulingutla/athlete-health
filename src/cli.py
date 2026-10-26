@@ -74,7 +74,7 @@ def cmd_ask(args) -> int:
         print("Vector store is empty. Run `index` first.", file=sys.stderr)
         return 1
     pipeline = RagPipeline(retriever=retriever, provider=args.provider)
-    result = pipeline.ask(args.question, top_k=args.top_k)
+    result = pipeline.ask(args.question, top_k=args.top_k, athlete_id=args.athlete_id)
 
     print(f"Q: {result.question}")
     print(f"[provider={result.provider}] "
@@ -129,8 +129,9 @@ def cmd_evaluate(args) -> int:
     if retriever.store.count() == 0:
         print("Vector store is empty. Run `index` first.", file=sys.stderr)
         return 1
-    report = evaluate(retriever=retriever, k=args.top_k)
-    print(f"Retrieval evaluation (k={report.k}, embedder='{retriever.embedder.backend}')")
+    report = evaluate(retriever=retriever, k=args.top_k, athlete_id=args.athlete_id)
+    print(f"Retrieval evaluation (athlete={args.athlete_id}, k={report.k}, "
+          f"embedder='{retriever.embedder.backend}')")
     print(f"{'question':<52}{'P@k':>7}{'R@k':>7}{'hit':>6}{'RR':>7}")
     print("-" * 79)
     for s in report.per_query:
@@ -178,6 +179,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     pa = sub.add_parser("ask", help="Ask a question against the indexed context.")
     pa.add_argument("question")
+    pa.add_argument("--athlete-id", default="athlete-a")
     pa.add_argument("--top-k", type=int, default=None)
     pa.add_argument("--provider", default=None,
                     choices=["openai", "azure", "anthropic", "offline"])
@@ -192,6 +194,7 @@ def build_parser() -> argparse.ArgumentParser:
     ps.set_defaults(func=cmd_stats)
 
     pe = sub.add_parser("evaluate", help="Measure retrieval quality against a gold set.")
+    pe.add_argument("--athlete-id", default="athlete-a")
     pe.add_argument("--top-k", type=int, default=6)
     pe.add_argument("--embed-backend", default=None,
                     choices=["sentence_transformers", "openai", "hashing"])

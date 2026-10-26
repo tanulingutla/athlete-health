@@ -12,6 +12,7 @@ cosine similarity reduces to a dot product downstream.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import math
 import re
@@ -22,6 +23,18 @@ from .config import PROVIDERS
 log = logging.getLogger("embeddings")
 
 _TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def _stable_hash(token: str) -> int:
+    """Process-independent hash.
+
+    Python's built-in hash() is salted per process (PYTHONHASHSEED), so using it
+    here would make the embedding of a token differ between the `index` run and a
+    later `ask`/`evaluate` run -- silently breaking retrieval. We use a stable
+    digest so indexing and querying always agree.
+    """
+    digest = hashlib.blake2b(token.encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big")
 
 
 def _normalise(vec: list[float]) -> list[float]:
@@ -48,7 +61,7 @@ class HashingEmbedder:
         for text in texts:
             vec = [0.0] * self.dim
             for tok in _TOKEN.findall(text.lower()):
-                h = hash(tok)
+                h = _stable_hash(tok)
                 idx = h % self.dim
                 sign = 1.0 if (h >> 31) & 1 == 0 else -1.0
                 vec[idx] += sign

@@ -114,12 +114,15 @@ def _score_query(case: EvalCase, retrieved_dates: list[str], k: int) -> QuerySco
 
 
 def evaluate(retriever: Retriever | None = None, k: int = 6,
-             gold: list[EvalCase] | None = None) -> EvalReport:
+             gold: list[EvalCase] | None = None,
+             athlete_id: str = "athlete-a") -> EvalReport:
+    # The gold set is grounded in athlete-a's data, so retrieval must be scoped to
+    # that athlete even when the shared store holds a whole cohort.
     retriever = retriever or Retriever()
     gold = gold or GOLD_SET
     scores = []
     for case in gold:
-        results = retriever.retrieve(case.question, top_k=k)
+        results = retriever.retrieve(case.question, top_k=k, athlete_id=athlete_id)
         dates = [r["metadata"].get("date") for r in results]
         scores.append(_score_query(case, dates, k))
     return EvalReport(per_query=scores, k=k)
